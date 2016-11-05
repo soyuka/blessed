@@ -1,26 +1,29 @@
 var blessed = require('../');
 
 var screen = blessed.screen({
-  dump: __dirname + '/logs/insert.log'
+  dump: __dirname + '/logs/insert.log',
+  warnings: true
 });
 
 var box = blessed.box({
   parent: screen,
   //align: 'center',
-  bg: 'blue',
+  style: {
+    bg: 'blue'
+  },
   height: 5,
   top: 'center',
   left: 0,
   width: 12,
   tags: true,
-  content: 'line{|}1',
+  content: '{yellow-fg}line{/yellow-fg}{|}1',
   //valign: 'middle'
 });
 
 screen.render();
 
-box.insertBottom('line{|}2');
-box.insertTop('line{|}0');
+box.insertBottom('{yellow-fg}line{/yellow-fg}{|}2');
+box.insertTop('{yellow-fg}line{/yellow-fg}{|}0');
 
 screen.render();
 
@@ -30,5 +33,5 @@ setTimeout(function() {
 }, 2000);
 
 screen.key('q', function() {
-  process.exit(0);
+  screen.destroy();
 });

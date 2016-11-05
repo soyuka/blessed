@@ -4,14 +4,13 @@ var screen = blessed.screen({
   tput: true,
   smartCSR: true,
   dump: __dirname + '/logs/prompt.log',
-  autoPadding: true
+  autoPadding: true,
+  warnings: true
 });
 
 var prompt = blessed.prompt({
   parent: screen,
-  border: {
-    type: 'ascii'
-  },
+  border: 'line',
   height: 'shrink',
   width: 'half',
   top: 'center',
@@ -24,9 +23,7 @@ var prompt = blessed.prompt({
 
 var question = blessed.question({
   parent: screen,
-  border: {
-    type: 'ascii'
-  },
+  border: 'line',
   height: 'shrink',
   width: 'half',
   top: 'center',
@@ -39,9 +36,7 @@ var question = blessed.question({
 
 var msg = blessed.message({
   parent: screen,
-  border: {
-    type: 'ascii'
-  },
+  border: 'line',
   height: 'shrink',
   width: 'half',
   top: 'center',
@@ -55,9 +50,7 @@ var msg = blessed.message({
 
 var loader = blessed.loading({
   parent: screen,
-  border: {
-    type: 'ascii'
-  },
+  border: 'line',
   height: 'shrink',
   width: 'half',
   top: 'center',
@@ -69,14 +62,14 @@ var loader = blessed.loading({
   vi: true
 });
 
-prompt.type('Question?', '', function(err, value) {
+prompt.input('Question?', '', function(err, value) {
   question.ask('Question?', function(err, value) {
     msg.display('Hello world!', 3, function(err) {
       msg.display('Hello world again!', -1, function(err) {
         loader.load('Loading...');
         setTimeout(function() {
           loader.stop();
-          process.exit(0);
+          screen.destroy();
         }, 3000);
       });
     });
@@ -84,7 +77,7 @@ prompt.type('Question?', '', function(err, value) {
 });
 
 screen.key('q', function() {
-  process.exit(0);
+  screen.destroy();
 });
 
 screen.render();

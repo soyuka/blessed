@@ -1,6 +1,7 @@
 var blessed = require('blessed');
 var screen = blessed.screen({
-  autoPadding: true
+  autoPadding: true,
+  warnings: true
 });
 
 var tab = blessed.box({
@@ -36,7 +37,7 @@ tab._.data = blessed.text({
 tab._.data.setContent(require('util').inspect(process, null, 6));
 
 screen.key('q', function() {
-  process.exit(0);
+  screen.destroy();
 });
 
 screen.render();

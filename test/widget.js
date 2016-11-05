@@ -2,7 +2,37 @@ var blessed = require('../')
   , screen;
 
 screen = blessed.screen({
-  dump: __dirname + '/logs/widget.log'
+  dump: __dirname + '/logs/widget.log',
+  title: 'widget test',
+  resizeTimeout: 300,
+  dockBorders: true,
+  cursor: {
+    artificial: true,
+    shape: 'line',
+    blink: true,
+    color: null
+  },
+  debug: true,
+  warnings: true
+});
+
+screen.debugLog.parseTags = true;
+var logs = '';
+require('./tail')(__dirname + '/logs/widget.log').on('line', function(line) {
+  // if (!screen.debugLog.hidden) return;
+  logs += line + '\n';
+});
+screen.debugLog.on('show', function() {
+  if (logs) {
+    screen.debug(logs);
+    logs = '';
+  }
+  screen.render();
+});
+
+screen.on('event', function(event, el) {
+  var type = (el && el.type) || Object.prototype.toString.call(el).slice(8, -1);
+  screen.program.log('emit("%s", {%s})', event, type);
 });
 
 screen.append(blessed.text({
@@ -11,7 +41,9 @@ screen.append(blessed.text({
   width: '100%',
   //bg: 'blue',
   content: '{green-fg}Welcome{/green-fg} to my {red-fg,ul}program{/red-fg,ul}',
-  bg: '#0000ff',
+  style: {
+    bg: '#0000ff'
+  },
   // bg: blessed.colors.match('#0000ff'),
   tags: true,
   align: 'center'
@@ -24,57 +56,31 @@ screen.append(blessed.line({
   right: 0
 }));
 
-/*
-screen.append(blessed.box({
-  fg: 4,
-  bg: -1,
-  border: {
-    type: 'ascii',
-    fg: -1,
-    bg: -1
-  },
-  content: 'Hello world!',
-  width: '50%',
-  height: '50%',
-  top: 'center',
-  left: 'center'
-}));
-
-screen.children[0].append(blessed.box({
-  fg: 4,
-  bg: 3,
-  border: {
-    type: 'bg',
-    fg: 0,
-    bg: 1,
-    ch: '/'
-  },
-  content: 'Foobar',
-  width: '50%',
-  height: '50%',
-  top: 'center',
-  left: 'center'
-}));
-*/
-
 var list = blessed.list({
   align: 'center',
   mouse: true,
-  fg: 'blue',
-  bg: 'default',
-  border: {
-    type: 'ascii',
-    fg: 'default',
-    bg: 'default'
+  label: ' My list ',
+  border: 'line',
+  style: {
+    fg: 'blue',
+    bg: 'default',
+    border: {
+      fg: 'default',
+      bg: 'default'
+    },
+    selected: {
+      bg: 'green'
+    }
   },
   width: '50%',
   height: '50%',
   top: 'center',
   left: 'center',
-  selectedBg: 'green',
+  tags: true,
+  invertSelected: false,
   items: [
     'one',
-    'two',
+    '{red-fg}two{/red-fg}',
     'three',
     'four',
     'five',
@@ -98,15 +104,13 @@ var list = blessed.list({
 screen.append(list);
 list.select(0);
 
-list.prepend(blessed.text({
-  left: 2,
-  content: ' My list '
-}));
+list.items.forEach(function(item) {
+  item.setHover(item.getText().trim());
+});
 
-if (screen.autoPadding) {
-  list.children[0].rleft = -list.ileft + 2;
-  list.children[0].rtop = -list.itop;
-}
+var item = list.items[1];
+list.removeItem(list.items[1]);
+list.insertItem(1, item.getContent());
 
 list.on('keypress', function(ch, key) {
   if (key.name === 'up' || key.name === 'k') {
@@ -120,15 +124,24 @@ list.on('keypress', function(ch, key) {
   }
 });
 
+list.on('select', function(item, select) {
+  list.setLabel(' ' + item.getText() + ' ');
+  screen.render();
+});
+
 var progress = blessed.progressbar({
-  fg: 'blue',
-  bg: 'default',
-  barBg: 'default',
-  barFg: 'blue',
-  border: {
-    type: 'ascii',
-    fg: 'default',
-    bg: 'default'
+  border: 'line',
+  style: {
+    fg: 'blue',
+    bg: 'default',
+    bar: {
+      bg: 'default',
+      fg: 'blue'
+    },
+    border: {
+      fg: 'default',
+      bg: 'default'
+    }
   },
   ch: ':',
   //orientation: 'vertical',
@@ -153,12 +166,14 @@ var stext = blessed.scrollabletext({
   //padding: 1,
   mouse: true,
   content: lorem,
-  fg: 'blue',
-  bg: 'black',
-  border: {
-    type: 'ascii',
-    fg: 'default',
-    bg: 'default'
+  border: 'line',
+  style: {
+    fg: 'blue',
+    bg: 'black',
+    border: {
+      fg: 'default',
+      bg: 'default'
+    }
   },
   width: '50%',
   //height: 4,
@@ -169,6 +184,33 @@ var stext = blessed.scrollabletext({
     inverse: true
   }
 });
+
+setTimeout(function() {
+  stext.width = 0;
+  screen.render();
+  setTimeout(function() {
+    stext.width = '50%';
+    screen.render();
+    setTimeout(function() {
+      stext.height = 0;
+      screen.render();
+      setTimeout(function() {
+        stext.height = 6;
+        screen.render();
+        setTimeout(function() {
+          stext.width = 0;
+          stext.height = 0;
+          screen.render();
+          setTimeout(function() {
+            stext.width = '50%';
+            stext.height = 6;
+            screen.render();
+          }, 1000);
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  }, 1000);
+}, 1000);
 
 screen.append(stext);
 stext.on('keypress', function(ch, key) {
@@ -189,31 +231,21 @@ screen.on('element focus', function(cur, old) {
   screen.render();
 });
 
-/*
-screen.on('element mouseover', function(el) {
-  el._bg = el.bg;
-  el.bg = 1;
-  screen.render();
-});
-
-screen.on('element mouseout', function(el) {
-  el.bg = el._bg;
-  screen.render();
-});
-*/
-
 var input = blessed.textbox({
-  mouse: true,
   label: ' My Input ',
   content: '',
-  fg: 'blue',
-  bg: 'default',
-  barBg: 'default',
-  barFg: 'blue',
-  border: {
-    type: 'ascii',
-    fg: 'default',
-    bg: 'default'
+  border: 'line',
+  style: {
+    fg: 'blue',
+    bg: 'default',
+    bar: {
+      bg: 'default',
+      fg: 'blue'
+    },
+    border: {
+      fg: 'default',
+      bg: 'default'
+    }
   },
   width: '30%',
   height: 3,
@@ -238,11 +270,11 @@ var button = blessed.button({
   content: 'Click\nme!',
   shrink: true,
   mouse: true,
-  border: {
-    type: 'ascii'
+  border: 'line',
+  style: {
+    fg: 'red',
+    bg: 'blue'
   },
-  fg: 'red',
-  bg: 'blue',
   //height: 3,
   right: 4,
   //bottom: 6,
@@ -257,22 +289,25 @@ button.on('press', function() {
 
 screen.append(button);
 
+screen.key('S-s', function() {
+  var rand = function(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+  };
+  var xi = rand(0, screen.cols - (stext.width - stext.iwidth));
+  var xl = xi + stext.width - stext.iwidth;
+  var yi = rand(0, screen.rows - (stext.height - stext.iheight));
+  var yl = yi + stext.height - stext.iheight;
+  stext.wrap = false;
+  stext.setContent(screen.screenshot(xi, xl, yi, xl));
+  screen.render();
+});
+
 screen.on('keypress', function(ch, key) {
   if (key.name === 'tab') {
     return key.shift
       ? screen.focusPrevious()
       : screen.focusNext();
   }
-  //if (key.name === 'i') {
-  //  return input.readInput(function(err, value) {
-  //    ;
-  //  });
-  //}
-  //if (key.name === 'e') {
-  //  return input.readEditor(function(err, value) {
-  //    ;
-  //  });
-  //}
   if (key.name === 'escape' || key.name === 'q') {
     return process.exit(0);
   }
@@ -283,10 +318,6 @@ screen.key('C-z', function() {
 });
 
 list.focus();
-
-//screen.on('element click', function(el) {
-//  el.focus();
-//});
 
 screen.render();
 
@@ -300,7 +331,7 @@ setInterval(function() {
     progress.reset();
   }
   progress.progress(2);
+  progress.atop -= 2;
   screen.render();
   setTimeout(fill, 300);
-  progress.top -= 2;
 })();

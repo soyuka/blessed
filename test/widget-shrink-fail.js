@@ -1,6 +1,7 @@
 var blessed = require('blessed');
 var screen = blessed.screen({
-  autoPadding: true
+  autoPadding: true,
+  warnings: true
 });
 
 var tab = blessed.box({
@@ -150,11 +151,11 @@ form._.submit.on('press', function() {
 form.on('submit', function(data) {
   screen.leave();
   console.log(data);
-  process.exit(0);
+  screen.destroy();
 });
 
 screen.key('q', function() {
-  process.exit(0);
+  screen.destroy();
 });
 
 screen.render();

@@ -2,7 +2,8 @@ var blessed = require('../')
   , screen;
 
 screen = blessed.screen({
-  dump: __dirname + '/logs/shrink-padding.log'
+  dump: __dirname + '/logs/shrink-padding.log',
+  warnings: true
 });
 
 var outer = blessed.box({
@@ -15,7 +16,9 @@ var outer = blessed.box({
   top: 'center',
   padding: 1,
   shrink: true,
-  bg: 'green'
+  style: {
+    bg: 'green'
+  }
 });
 
 var inner = blessed.box({
@@ -28,11 +31,13 @@ var inner = blessed.box({
   content: 'foobar',
   //padding: 1,
   //content: 'f',
-  bg: 'magenta'
+  style: {
+    bg: 'magenta'
+  }
 });
 
 screen.key('q', function() {
-  return process.exit(0);
+  return screen.destroy();
 });
 
 screen.render();

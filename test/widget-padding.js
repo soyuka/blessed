@@ -2,15 +2,16 @@ var blessed = require('../')
   , screen;
 
 screen = blessed.screen({
-  dump: __dirname + '/logs/padding.log'
+  dump: __dirname + '/logs/padding.log',
+  warnings: true
 });
 
 blessed.box({
   parent: screen,
-  border: {
-    type: 'ascii',
+  border: 'line',
+  style: {
+    bg: 'red',
   },
-  bg: 'red',
   content: 'hello world\nhi',
   align: 'center',
   left: 'center',
@@ -21,7 +22,7 @@ blessed.box({
 });
 
 screen.key('q', function() {
-  return process.exit(0);
+  return screen.destroy();
 });
 
 screen.render();

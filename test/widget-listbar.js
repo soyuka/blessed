@@ -5,7 +5,8 @@ var auto = true;
 
 screen = blessed.screen({
   dump: __dirname + '/logs/listbar.log',
-  autoPadding: auto
+  autoPadding: auto,
+  warnings: true
 });
 
 var box = blessed.box({
@@ -18,7 +19,7 @@ var box = blessed.box({
 });
 
 var bar = blessed.listbar({
-  parent: screen,
+  //parent: screen,
   bottom: 0,
   left: 3,
   right: 3,
@@ -26,9 +27,7 @@ var bar = blessed.listbar({
   mouse: true,
   keys: true,
   autoCommandKeys: true,
-  border: {
-    type: 'line'
-  },
+  border: 'line',
   vi: true,
   style: {
     bg: 'green',
@@ -112,10 +111,12 @@ var bar = blessed.listbar({
   }
 });
 
+screen.append(bar);
+
 bar.focus();
 
 screen.key('q', function() {
-  return process.exit(0);
+  return screen.destroy();
 });
 
 screen.render();
